@@ -6,51 +6,52 @@ def getWebData():
     cmd = 'GET http://data.pr4e.org/intro-short.txt HTTP/1.0\r\n\r\n'.encode()
     mysock.send(cmd)
 
-    raw = ""
+    response = ''
+    
+
     while True:
         data = mysock.recv(512)
         if len(data) < 1:
             break
-        raw += data.decode()
+        line =(data.decode())
+        response += line
     mysock.close()
-    raw = raw.splitlines()
-    headerDict = getHTTPHeaders(raw)
-    
-    print('Headers:')
-    for key, value in headerDict.items():
+    response = response.splitlines()
+
+    header_dictionary = build_header_dictionary(response)
+    for key, value in header_dictionary.items():
         print(f'{key} : {value}')
-    
-    print("\nData:")
-    data = getData(raw)
-    for line in data:
+    #print(response)
+    data_list = build_data_list(response)
+    for line in data_list: 
         print(line)
 
+def build_header_dictionary(response_list):
+    header_dictionary = {}
 
-def getData(rawData):
-    data = []
-    dataBool = False
+    for line in response_list: 
+        if ":" in line:
+            splitline = line.split(": ")
+            key,value = splitline[0],splitline[1]
+            header_dictionary[key]=value
+    return header_dictionary     
 
-    for line in rawData:
-        if line == "":
-            dataBool = True
-            data.append(line)
-        elif dataBool == True:
-            data.append(line)
-        else: 
-            continue
-    return data
-
-
-def getHTTPHeaders(rawData):
-    retDict = {}
-    for line in rawData:
-        if line == "":
-            break
-        if ":" not in line:
-            continue
-        retDict[(line.split(':', 1)[0].strip())] = line.split(':', 1)[-1].strip()
+def build_data_list(response_list):
+    data_list = []
+    atData = False 
     
-    return retDict
+    for line in response_list: 
+        #print(line)
+        
+        if line == '': 
+            atData = True
+            data_list.append(line)
+        elif atData == True:
+            data_list.append(line)
+        else: 
+            #print(line)
+            continue
+    return data_list
 
-if __name__ == "__main__":    
-    getWebData()
+
+# getWebData()
